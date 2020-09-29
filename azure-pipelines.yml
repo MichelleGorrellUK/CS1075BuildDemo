@@ -1,0 +1,41 @@
+﻿pool:
+  name: Azure Pipelines
+  vmImage: 'windows-2019'
+  demands:
+  - msbuild
+  - visualstudio
+  - vstest
+
+variables:
+  Parameters.solution: '**/*.sln'
+  BuildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  Parameters.ArtifactName: 'Drop'
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Use NuGet 5.0.0'
+  inputs:
+    versionSpec: 5.0.0
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore'
+  inputs:
+    restoreSolution: '$(Parameters.solution)'
+
+- task: VSBuild@1
+  displayName: 'Build solution'
+  inputs:
+    solution: '$(Parameters.solution)'
+    msbuildArgs: '/p:SkipInvalidConfigurations=true '
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
+
+- task: VSTest@2
+  displayName: 'Test Assemblies'
+  inputs:
+    testAssemblyVer2: |
+     **\*test*.dll
+     !**\obj\**
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
